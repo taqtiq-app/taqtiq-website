@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaqTiq – Zeiterfassung für iPhone & Apple Watch</title>
+<meta name="description" content="TaqTiq erfasst deine Arbeitszeit mit einem einzigen Tippen. Kategorien, Excel- & PDF-Export, Apple Watch. Minimalistisch, schnell, präzise.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --gray: #888;
+    --light: #1a1a1a;
+    --border: rgba(255,255,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(10,10,10,0.8);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace; font-size: 16px;
+    font-weight: 500; letter-spacing: 0.1em;
+    color: var(--white); text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    color: var(--gray); text-decoration: none; font-size: 13px;
+    letter-spacing: 0.05em; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    padding: 120px 40px 80px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+  }
+  .hero-tag {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.2em; color: var(--gray); text-transform: uppercase;
+    margin-bottom: 32px; opacity: 0; animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+  .hero-title {
+    font-size: clamp(56px, 10vw, 120px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1; margin-bottom: 24px;
+    opacity: 0; animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+  .hero-title span { font-family: 'DM Mono', monospace; font-weight: 300; }
+  .hero-sub {
+    font-size: clamp(16px, 2vw, 20px); font-weight: 300; color: var(--gray);
+    max-width: 480px; margin-bottom: 48px;
+    opacity: 0; animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 32px; background: var(--white); color: var(--black);
+    text-decoration: none; font-size: 14px; font-weight: 500;
+    letter-spacing: 0.05em; border-radius: 100px;
+    transition: transform 0.2s, opacity 0.2s;
+    opacity: 0; animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+  .hero-cta:hover { transform: scale(1.03); opacity: 0.9; }
+  .hero-cta svg { width: 16px; height: 16px; }
+
+  /* Trial badge */
+  .trial-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 20px;
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--gray); letter-spacing: 0.08em;
+    opacity: 0; animation: fadeUp 0.8s ease 1.0s forwards;
+  }
+  .trial-badge em { font-style: normal; color: var(--white); }
+
+  .platform-badges {
+    display: flex; justify-content: center; gap: 16px;
+    margin-top: 24px; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 0.8s ease 1.1s forwards;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px; border: 1px solid var(--border); border-radius: 100px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--gray); letter-spacing: 0.1em;
+  }
+
+  .hero-scroll {
+    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0; animation: fadeUp 0.8s ease 1.3s forwards;
+  }
+  .hero-scroll span {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; color: var(--gray); text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--gray), transparent);
+    animation: scrollLine 2s ease-in-out infinite;
+  }
+  @keyframes scrollLine {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(0.7); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Sections ── */
+  section { padding: 100px 40px; max-width: 1000px; margin: 0 auto; }
+  .section-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.25em; color: var(--gray); text-transform: uppercase;
+    margin-bottom: 48px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Intro ── */
+  .intro-block {
+    padding: 100px 40px; border-top: 1px solid var(--border);
+    text-align: center; max-width: 1000px; margin: 0 auto;
+  }
+  .intro-headline {
+    font-size: clamp(32px, 5vw, 64px); font-weight: 200;
+    letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px;
+  }
+  .intro-headline em {
+    font-style: normal; font-family: 'DM Mono', monospace;
+    font-weight: 300; color: var(--gray);
+  }
+  .intro-tagline {
+    font-size: clamp(14px, 2vw, 18px); color: var(--gray);
+    font-weight: 300; margin-bottom: 40px; letter-spacing: 0.02em;
+  }
+  .intro-no-list { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-bottom: 32px; }
+  .intro-no-list span {
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gray);
+    letter-spacing: 0.05em; opacity: 0.7;
+    text-decoration: line-through; text-decoration-color: rgba(136,136,136,0.4);
+  }
+  .intro-only {
+    font-size: clamp(18px, 3vw, 28px); font-weight: 300;
+    letter-spacing: -0.01em; color: var(--white);
+  }
+  .intro-only em { font-style: normal; font-family: 'DM Mono', monospace; }
+
+  /* ── Pricing Banner ── */
+  .pricing-banner {
+    padding: 60px 40px; border-top: 1px solid var(--border);
+    max-width: 1000px; margin: 0 auto; text-align: center;
+  }
+  .pricing-inner {
+    border: 1px solid var(--border);
+    padding: 48px 40px;
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .pricing-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.25em; color: var(--gray); text-transform: uppercase;
+  }
+  .pricing-title {
+    font-size: clamp(28px, 4vw, 48px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.1;
+  }
+  .pricing-price {
+    font-family: 'DM Mono', monospace; font-size: clamp(32px, 5vw, 56px);
+    font-weight: 300; letter-spacing: -0.02em;
+  }
+  .pricing-price sub {
+    font-size: 16px; vertical-align: baseline; color: var(--gray);
+  }
+  .pricing-trial {
+    font-size: 14px; color: var(--gray);
+  }
+  .pricing-trial strong { color: var(--white); font-weight: 400; }
+  .pricing-features {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 10px; margin-top: 8px;
+  }
+  .pricing-feat {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border: 1px solid var(--border);
+    font-size: 12px; font-family: 'DM Mono', monospace;
+    color: var(--gray); letter-spacing: 0.05em;
+  }
+  .pricing-feat::before { content: '✓'; color: var(--white); opacity: 0.5; }
+
+  /* ── Use Cases ── */
+  .usecases-block {
+    padding: 80px 40px; border-top: 1px solid var(--border);
+    max-width: 1000px; margin: 0 auto;
+  }
+  .usecases-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+  .usecases-text h2 {
+    font-size: clamp(24px, 4vw, 44px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 16px;
+  }
+  .usecases-text p { font-size: 15px; color: var(--gray); line-height: 1.8; max-width: 380px; }
+  .usecases-tags { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 8px; }
+  .use-tag {
+    display: inline-flex; align-items: center; padding: 10px 18px;
+    border: 1px solid var(--border); font-size: 13px;
+    font-family: 'DM Mono', monospace; color: var(--gray);
+    letter-spacing: 0.05em; transition: border-color 0.2s, color 0.2s;
+  }
+  .use-tag:hover { border-color: rgba(255,255,255,0.25); color: var(--white); }
+
+  /* ── Features ── */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px; background: var(--border); border: 1px solid var(--border);
+  }
+  .feature { background: var(--black); padding: 36px 32px; transition: background 0.3s; }
+  .feature:hover { background: var(--light); }
+  .feature-icon { font-family: 'DM Mono', monospace; font-size: 24px; margin-bottom: 16px; display: block; }
+  .feature h3 { font-size: 16px; font-weight: 500; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .feature p { font-size: 14px; color: var(--gray); line-height: 1.7; }
+
+  /* ── Checklist ── */
+  .checklist-block {
+    padding: 80px 40px; border-top: 1px solid var(--border);
+    max-width: 1000px; margin: 0 auto;
+  }
+  .checklist-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+  .checklist-text h2 {
+    font-size: clamp(22px, 3.5vw, 40px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 12px;
+  }
+  .checklist-text p { font-size: 14px; color: var(--gray); line-height: 1.8; }
+  .checklist { display: flex; flex-direction: column; gap: 12px; }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    font-size: 14px; color: var(--gray); line-height: 1.6;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .check-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .check-mark {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--white); opacity: 0.6; padding-top: 1px; flex-shrink: 0;
+  }
+
+  /* ── Philosophy ── */
+  .philosophy-block {
+    padding: 100px 40px; border-top: 1px solid var(--border);
+    max-width: 1000px; margin: 0 auto;
+  }
+  .philosophy-quote {
+    font-size: clamp(20px, 3.5vw, 36px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.4; max-width: 700px;
+    margin-bottom: 40px; color: var(--white);
+  }
+  .philosophy-quote strong { font-weight: 400; color: var(--white); }
+  .philosophy-sub { font-size: 14px; color: var(--gray); line-height: 1.9; max-width: 520px; }
+
+  /* ── For Everyone ── */
+  .forall-block {
+    padding: 80px 40px; border-top: 1px solid var(--border);
+    max-width: 1000px; margin: 0 auto;
+  }
+  .forall-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
+  .forall-text h2 {
+    font-size: clamp(24px, 4vw, 44px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 16px;
+  }
+  .forall-text p { font-size: 15px; color: var(--gray); line-height: 1.8; }
+  .forall-roles { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); }
+  .forall-role {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gray);
+    letter-spacing: 0.08em; display: flex; align-items: center; gap: 12px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .forall-role:last-child { border-bottom: none; }
+  .forall-role:hover { background: var(--light); color: var(--white); }
+  .forall-role::before { content: '→'; opacity: 0.35; font-size: 11px; }
+
+  /* ── How it works ── */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid; grid-template-columns: 60px 1fr; gap: 32px;
+    padding: 32px 0; border-bottom: 1px solid var(--border); align-items: start;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray); padding-top: 4px; letter-spacing: 0.1em; }
+  .step h3 { font-size: 20px; font-weight: 400; margin-bottom: 8px; letter-spacing: -0.02em; }
+  .step p { font-size: 14px; color: var(--gray); line-height: 1.7; max-width: 480px; }
+
+  /* ── Stats ── */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 60px;
+  }
+  .stat { background: var(--black); padding: 40px 32px; }
+  .stat-value { font-family: 'DM Mono', monospace; font-size: 40px; font-weight: 300; line-height: 1; margin-bottom: 8px; }
+  .stat-label { font-size: 13px; color: var(--gray); letter-spacing: 0.05em; }
+
+  /* ── CTA Block ── */
+  .cta-block {
+    text-align: center; padding: 100px 40px;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .cta-block h2 { font-size: clamp(32px, 5vw, 64px); font-weight: 200; letter-spacing: -0.02em; margin-bottom: 16px; }
+  .cta-block p { color: var(--gray); font-size: 16px; margin-bottom: 40px; }
+
+  /* ── Final CTA ── */
+  .final-cta {
+    text-align: center; padding: 120px 40px;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .final-cta::before {
+    content: ''; position: absolute; width: 800px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .final-cta-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.3em; color: var(--gray); text-transform: uppercase; margin-bottom: 28px;
+  }
+  .final-cta h2 { font-size: clamp(40px, 7vw, 88px); font-weight: 200; letter-spacing: -0.03em; line-height: 1; margin-bottom: 24px; }
+  .final-cta-pillars { display: flex; justify-content: center; gap: 32px; margin-bottom: 48px; flex-wrap: wrap; }
+  .final-pillar {
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gray);
+    letter-spacing: 0.15em; text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+  }
+  .final-pillar::before { content: ''; width: 20px; height: 1px; background: var(--gray); opacity: 0.4; }
+  .cta-inline {
+    display: inline-flex; align-items: center; gap: 10px; padding: 14px 32px;
+    background: var(--white); color: var(--black); text-decoration: none;
+    font-size: 14px; font-weight: 500; letter-spacing: 0.05em; border-radius: 100px;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .cta-inline:hover { transform: scale(1.03); opacity: 0.9; }
+
+  /* ── Privacy ── */
+  .privacy-content { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+  .privacy-section h3 { font-size: 13px; font-weight: 500; letter-spacing: 0.05em; margin-bottom: 8px; color: var(--white); }
+  .privacy-section p { font-size: 13px; color: var(--gray); line-height: 1.8; margin-bottom: 24px; }
+  .privacy-lang-title {
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em;
+    color: var(--gray); text-transform: uppercase; margin-bottom: 32px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 40px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px; max-width: 1000px; margin: 0 auto;
+  }
+  footer p { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray); letter-spacing: 0.05em; }
+  footer a { color: var(--gray); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--white); }
+
+  /* ── Screens (App Preview) ── */
+  .screens-block {
+    padding: 100px 40px;
+    border-top: 1px solid var(--border);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .screens-header { text-align: left; margin-bottom: 56px; max-width: 720px; }
+  .screens-header h2 {
+    font-size: clamp(28px, 4.5vw, 56px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 16px;
+  }
+  .screens-header h2 em {
+    font-style: normal; font-family: 'DM Mono', monospace;
+    font-weight: 300; color: var(--gray);
+  }
+  .screens-header p { font-size: 15px; color: var(--gray); line-height: 1.7; max-width: 520px; }
+  .screens-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 40px 60px; align-items: start;
+  }
+  .screen-item { display: flex; flex-direction: column; gap: 0; }
+  .screen-item img {
+    width: 100%; height: auto; display: block;
+    border-radius: 6px;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    section { padding: 60px 20px; }
+    .hero { padding: 100px 20px 60px; }
+    footer { padding: 32px 20px; flex-direction: column; text-align: center; }
+    .usecases-inner, .checklist-inner, .forall-inner { grid-template-columns: 1fr; gap: 36px; }
+    .intro-block, .usecases-block, .philosophy-block, .forall-block,
+    .checklist-block, .pricing-banner { padding: 60px 20px; }
+    .final-cta { padding: 80px 20px; }
+    .pricing-inner { padding: 32px 20px; }
+    .privacy-content { grid-template-columns: 1fr; }
+    .screens-block { padding: 60px 20px; }
+    .screens-grid { grid-template-columns: 1fr; gap: 28px; }
+    .screens-header { margin-bottom: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">TaqTiq</a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Preise</a></li>
+    <li><a href="#how">So funktioniert's</a></li>
+    <li><a href="#privacy">Datenschutz</a></li>
+    <li><a href="#terms">Nutzungsbedingungen</a></li>
+    <li><a href="#support">Support</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="hero-tag">iPhone &amp; Apple Watch</p>
+  <h1 class="hero-title"><span>Taq</span>Tiq</h1>
+  <p class="hero-sub">Zeiterfassung so einfach, dass du aufhörst darüber nachzudenken. Ein Tippen zum Starten. Ein Tippen zum Stoppen.</p>
+  <a href="https://apps.apple.com/de/app/taqtiq/id6770505911" target="_blank" rel="noopener" class="hero-cta">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+    Im App Store laden
+  </a>
+  <div class="trial-badge">
+    <em>7 Tage kostenlos</em> — danach 1,99 € / Jahr
+  </div>
+  <div class="platform-badges">
+    <span class="badge">⌚ Apple Watch</span>
+    <span class="badge">📱 iPhone</span>
+    <span class="badge">🏷 Kategorien</span>
+    <span class="badge">📤 Excel &amp; PDF</span>
+    <span class="badge">🔒 Keine Cloud</span>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="intro-block">
+  <h2 class="intro-headline">Zeit sichtbar machen.<br><em>Klarer. Einfacher. Bewusster.</em></h2>
+  <p class="intro-tagline">Willkommen bei TaqTiq — der minimalistischen App für Menschen,<br>die ihre Zeit wirklich verstehen wollen.</p>
+  <div class="intro-no-list">
+    <span>Keine komplizierten Tabellen</span>
+    <span>Keine überladenen Funktionen</span>
+    <span>Keine unnötigen Ablenkungen</span>
+  </div>
+  <p class="intro-only">Nur das, was zählt: <em>Deine Zeit.</em></p>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-banner" id="pricing">
+  <div class="pricing-inner">
+    <p class="pricing-label">Preis</p>
+    <p class="pricing-title">Einfach. Fair. Einmal im Jahr.</p>
+    <p class="pricing-price">1,99 € <sub>/ Jahr</sub></p>
+    <p class="pricing-trial"><strong>7 Tage kostenlos testen</strong> — keine Zahlungspflicht während der Testphase.</p>
+    <div class="pricing-features">
+      <span class="pricing-feat">Alle Funktionen</span>
+      <span class="pricing-feat">Excel-Export</span>
+      <span class="pricing-feat">PDF-Export</span>
+      <span class="pricing-feat">Eigene Kategorien</span>
+      <span class="pricing-feat">Apple Watch</span>
+      <span class="pricing-feat">iCloud Sync</span>
+      <span class="pricing-feat">8 Sprachen</span>
+    </div>
+    <a href="https://apps.apple.com/de/app/taqtiq/id6770505911" target="_blank" rel="noopener" class="hero-cta" style="opacity:1;animation:none;margin-top:8px;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Jetzt kostenlos starten
+    </a>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<div class="usecases-block" id="usecases">
+  <div class="usecases-inner">
+    <div class="usecases-text">
+      <p class="section-label">Tracke alles</p>
+      <h2>Arbeit, Fokus und Leben —<br>mit einem einzigen Tap.</h2>
+      <p>Starte und stoppe deine Zeit sekundenschnell. Weise Einträge Kategorien zu — mit einem einzigen Tipp. TaqTiq macht sichtbar, wie du deinen Tag wirklich nutzt.</p>
+    </div>
+    <div class="usecases-tags">
+      <span class="use-tag">Arbeit</span>
+      <span class="use-tag">Studium</span>
+      <span class="use-tag">Sport</span>
+      <span class="use-tag">Fokusphasen</span>
+      <span class="use-tag">Projekte</span>
+      <span class="use-tag">Gewohnheiten</span>
+      <span class="use-tag">Freizeit</span>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <p class="section-label">Features</p>
+  <div class="features-grid">
+    <div class="feature">
+      <span class="feature-icon">⏱</span>
+      <h3>Ein Tippen. Fertig.</h3>
+      <p>Start. Stop. TaqTiq erledigt den Rest. Keine Formulare, kein Overhead.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">⌚</span>
+      <h3>Apple Watch</h3>
+      <p>Direkt am Handgelenk starten und stoppen. Automatische Synchronisation mit dem iPhone.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🏷</span>
+      <h3>Eigene Kategorien</h3>
+      <p>Erstelle farbige Kategorien wie „Arbeit", „Pause" oder „Projekt A" und weise sie Einträgen mit einem Tipp zu.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">📊</span>
+      <h3>Statistiken</h3>
+      <p>Tages-, Wochen-, Monats- und Jahresübersicht — gefiltert nach Kategorie. Einträge direkt in der Detailansicht bearbeiten.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">📤</span>
+      <h3>Excel &amp; PDF Export</h3>
+      <p>Alle Zeiteinträge als .xlsx oder PDF exportieren — strukturiert, professionell, direkt teilbar.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">☁️</span>
+      <h3>iCloud Sync</h3>
+      <p>Deine Daten synchronisieren automatisch zwischen iPhone und iPad über iCloud.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🔒</span>
+      <h3>Privatsphäre</h3>
+      <p>Alle Daten bleiben auf deinem Gerät. Keine externen Server, keine Registrierung, keine Werbung.</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🌍</span>
+      <h3>8 Sprachen</h3>
+      <p>Deutsch, Englisch, Russisch, Chinesisch, Spanisch, Italienisch, Hindi, Arabisch.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENS -->
+<div class="screens-block">
+  <div class="screens-header">
+    <p class="section-label">Eindrücke</p>
+    <h2>Vier Screens.<br><em>Eine klare Idee.</em></h2>
+    <p>Timer, Verlauf, Statistik, Einstellungen — bewusst reduziert. Du tippst, TaqTiq zählt. Du wischst, TaqTiq zeigt dir, wohin deine Zeit fließt.</p>
+  </div>
+  <div class="screens-grid">
+    <div class="screen-item"><img src="timer.png" alt="TaqTiq Timer-Screen — Ein Tippen, fertig" loading="lazy"></div>
+    <div class="screen-item"><img src="verlauf.png" alt="TaqTiq Verlauf — Privatsphäre, alle Daten synchronisieren automatisch" loading="lazy"></div>
+    <div class="screen-item"><img src="statistik.png" alt="TaqTiq Statistik — Excel & PDF Export, eigene Kategorien" loading="lazy"></div>
+    <div class="screen-item"><img src="sprachen.png" alt="TaqTiq Einstellungen — 8 Sprachen, Apple Watch, iPhone, iPad" loading="lazy"></div>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div class="checklist-block">
+  <div class="checklist-inner">
+    <div class="checklist-text">
+      <p class="section-label">Minimalistisch bis ins Detail</p>
+      <h2>Entwickelt für Menschen, die Klarheit lieben.</h2>
+      <p>Schnell. Elegant. Ohne Chaos. TaqTiq ist konsequent auf das Wesentliche reduziert — damit du dich auf das konzentrieren kannst, was wirklich wichtig ist.</p>
+    </div>
+    <div class="checklist">
+      <div class="check-item"><span class="check-mark">✔</span><span>Intuitive Bedienung</span></div>
+      <div class="check-item"><span class="check-mark">✔</span><span>Modernes, ruhiges Design</span></div>
+      <div class="check-item"><span class="check-mark">✔</span><span>Eigene Kategorien mit Farbauswahl</span></div>
+      <div class="check-item"><span class="check-mark">✔</span><span>Tages-, Wochen-, Monats- &amp; Jahresübersichten</span></div>
+      <div class="check-item"><span class="check-mark">✔</span><span>Statistiken direkt bearbeiten</span></div>
+      <div class="check-item"><span class="check-mark">✔</span><span>Export als Excel &amp; PDF</span></div>
+      <div class="check-item"><span class="check-mark">✔</span><span>Kategorie-Filter in der Statistik</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHILOSOPHY -->
+<div class="philosophy-block">
+  <p class="section-label">Philosophie</p>
+  <p class="philosophy-quote">
+    Zeit ist mehr als Produktivität.<br>
+    TaqTiq soll dich nicht stressen —<br>
+    TaqTiq soll dir zeigen, <strong>wohin deine Zeit wirklich fließt.</strong>
+  </p>
+  <p class="philosophy-sub">Denn erst wenn Zeit sichtbar wird, kann man sie bewusst gestalten.</p>
+</div>
+
+<!-- FOR EVERYONE -->
+<div class="forall-block">
+  <div class="forall-inner">
+    <div class="forall-text">
+      <p class="section-label">Für alle gemacht</p>
+      <h2>TaqTiq passt sich deinem Alltag an —<br>nicht umgekehrt.</h2>
+      <p>Egal wer du bist oder wie du arbeitest: TaqTiq ist so gestaltet, dass es einfach funktioniert — ohne Lernkurve, ohne Kompromisse.</p>
+    </div>
+    <div class="forall-roles">
+      <div class="forall-role">Selbstständige</div>
+      <div class="forall-role">Angestellte</div>
+      <div class="forall-role">Studierende</div>
+      <div class="forall-role">Kreative</div>
+      <div class="forall-role">Unternehmer</div>
+      <div class="forall-role">Sportler</div>
+      <div class="forall-role">Minimalisten</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <p class="section-label">So funktioniert's</p>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">01</span>
+      <div>
+        <h3>App öffnen</h3>
+        <p>TaqTiq startet sofort auf dem Timer-Screen. Kein Login, keine Einrichtung, kein Aufwand.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <div>
+        <h3>Start tippen</h3>
+        <p>Großer, eindeutiger Button. Optional vorher eine Kategorie auswählen — oder einfach direkt loslegen.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <div>
+        <h3>Stop tippen & Kategorie zuweisen</h3>
+        <p>Nochmal tippen wenn du fertig bist. Danach die Kategorie des Eintrags mit einem Tipp durchklicken — so schnell wie möglich.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">04</span>
+      <div>
+        <h3>Exportieren</h3>
+        <p>Alle Einträge als Excel- oder PDF-Datei exportieren und direkt teilen — per Mail, WhatsApp oder AirDrop.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section>
+  <p class="section-label">Auf einen Blick</p>
+  <div class="stats-grid">
+    <div class="stat">
+      <div class="stat-value">1×</div>
+      <div class="stat-label">Tippen zum Starten</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">8</div>
+      <div class="stat-label">Sprachen</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">∞</div>
+      <div class="stat-label">Einträge möglich</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">1,99</div>
+      <div class="stat-label">€ / Jahr</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-block">
+  <h2>Starte jetzt.</h2>
+  <p>7 Tage kostenlos — dann 1,99 € / Jahr. Verfügbar für iPhone und Apple Watch.</p>
+  <a href="https://apps.apple.com/de/app/taqtiq/id6770505911" target="_blank" rel="noopener" class="hero-cta" style="opacity:1;animation:none;">
+    <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+    Im App Store laden
+  </a>
+</div>
+
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <p class="final-cta-label">Own your time</p>
+  <h2>Weniger Ablenkung.<br>Mehr Bewusstsein.</h2>
+  <div class="final-cta-pillars">
+    <span class="final-pillar">Weniger Ablenkung</span>
+    <span class="final-pillar">Mehr Bewusstsein</span>
+    <span class="final-pillar">Mehr Fokus</span>
+  </div>
+  <a href="https://apps.apple.com/de/app/taqtiq/id6770505911" target="_blank" rel="noopener" class="cta-inline">
+    <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+    Jetzt entdecken
+  </a>
+</div>
+
+<!-- PRIVACY -->
+<section id="privacy">
+  <p class="section-label">Datenschutz</p>
+  <div class="privacy-content">
+    <div>
+      <p class="privacy-lang-title">Deutsch</p>
+      <div class="privacy-section">
+        <h3>Datenspeicherung</h3>
+        <p>TaqTiq speichert alle Daten ausschließlich lokal auf deinem Gerät und optional in deiner persönlichen iCloud. Es werden keine Daten auf externe Server übertragen.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Keine Datenerhebung</h3>
+        <p>Es werden keinerlei persönliche Daten erhoben, gespeichert oder an Dritte weitergegeben. Es gibt keine Nutzerkonten, keine Analyse-Tools und keine Werbung.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Apple Watch Synchronisation</h3>
+        <p>Die Synchronisation zwischen iPhone und Apple Watch erfolgt ausschließlich über die direkte Geräteverbindung (WatchConnectivity). Es werden keine Daten über das Internet übertragen.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Excel- &amp; PDF-Export</h3>
+        <p>Der Export erfolgt lokal auf deinem Gerät. Die exportierte Datei verbleibt auf deinem Gerät oder wird von dir manuell geteilt.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Abonnement</h3>
+        <p>Zahlungen werden ausschließlich über Apple In-App Purchase abgewickelt. TaqTiq hat keinen Zugriff auf Zahlungsdaten.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Kontakt</h3>
+        <p>Bei Fragen: <a href="mailto:taqtiq@mail.de" style="color:var(--white)">taqtiq@mail.de</a><br>Letzte Aktualisierung: Mai 2026</p>
+      </div>
+    </div>
+    <div>
+      <p class="privacy-lang-title">English</p>
+      <div class="privacy-section">
+        <h3>Data Storage</h3>
+        <p>TaqTiq stores all data exclusively on your device and optionally in your personal iCloud. No data is transmitted to external servers.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>No Data Collection</h3>
+        <p>No personal data is collected, stored, or shared with third parties. There are no user accounts, no analytics tools, and no advertising.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Apple Watch Sync</h3>
+        <p>Synchronization between iPhone and Apple Watch occurs exclusively via direct device connection (WatchConnectivity). No data is transmitted over the internet.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Excel &amp; PDF Export</h3>
+        <p>Exporting is done locally on your device. The exported file remains on your device or is manually shared by you.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Subscription</h3>
+        <p>Payments are processed exclusively through Apple In-App Purchase. TaqTiq has no access to payment data.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Contact</h3>
+        <p>Questions: <a href="mailto:taqtiq@mail.de" style="color:var(--white)">taqtiq@mail.de</a><br>Last updated: May 2026</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPORT -->
+<section id="support">
+  <p class="section-label">Support</p>
+  <div class="privacy-content">
+    <div>
+      <p class="privacy-lang-title">Deutsch</p>
+      <div class="privacy-section">
+        <h3>Kontakt</h3>
+        <p>Bei Fragen, Problemen oder Feedback erreichst du uns direkt per E-Mail:<br>
+        <a href="mailto:taqtiq@mail.de" style="color:var(--white);font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.03em;">taqtiq@mail.de</a></p>
+      </div>
+      <div class="privacy-section">
+        <h3>Häufige Fragen</h3>
+        <p><strong style="color:var(--white);font-weight:400;">Wie kündige ich das Abo?</strong><br>Das Abo kann jederzeit über die iOS-Einstellungen unter Deinen Namen → Abonnements gekündigt werden.</p>
+      </div>
+      <div class="privacy-section">
+        <p><strong style="color:var(--white);font-weight:400;">Werden meine Daten gesichert?</strong><br>Ja — optional über deine persönliche iCloud. Alle Daten verbleiben bei dir.</p>
+      </div>
+      <div class="privacy-section">
+        <p><strong style="color:var(--white);font-weight:400;">Funktioniert TaqTiq ohne Apple Watch?</strong><br>Ja, die Apple Watch ist optional. TaqTiq funktioniert vollständig auf dem iPhone allein.</p>
+      </div>
+    </div>
+    <div>
+      <p class="privacy-lang-title">English</p>
+      <div class="privacy-section">
+        <h3>Contact</h3>
+        <p>For questions, issues, or feedback, reach us directly by email:<br>
+        <a href="mailto:taqtiq@mail.de" style="color:var(--white);font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.03em;">taqtiq@mail.de</a></p>
+      </div>
+      <div class="privacy-section">
+        <h3>FAQ</h3>
+        <p><strong style="color:var(--white);font-weight:400;">How do I cancel my subscription?</strong><br>You can cancel anytime via iOS Settings → Your Name → Subscriptions.</p>
+      </div>
+      <div class="privacy-section">
+        <p><strong style="color:var(--white);font-weight:400;">Are my data backed up?</strong><br>Yes — optionally via your personal iCloud. All data stays with you.</p>
+      </div>
+      <div class="privacy-section">
+        <p><strong style="color:var(--white);font-weight:400;">Does TaqTiq work without an Apple Watch?</strong><br>Yes, the Apple Watch is optional. TaqTiq works fully on iPhone alone.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMS -->
+<section id="terms">
+  <p class="section-label">Nutzungsbedingungen</p>
+  <div class="privacy-content">
+    <div>
+      <p class="privacy-lang-title">Deutsch</p>
+      <div class="privacy-section">
+        <h3>Apple Standard-Endnutzer-Lizenzvertrag (EULA)</h3>
+        <p>TaqTiq unterliegt den Standard-Nutzungsbedingungen von Apple für Apps, die über den App Store vertrieben werden. Die vollständigen Bedingungen sind unter folgendem Link einsehbar:</p>
+        <p style="margin-top:12px;"><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener" style="color:var(--white);text-decoration:underline;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.03em;">apple.com/legal/internet-services/itunes/dev/stdeula</a></p>
+      </div>
+      <div class="privacy-section">
+        <h3>Nutzungsrecht</h3>
+        <p>Du erhältst ein nicht übertragbares Recht, TaqTiq auf Apple-Geräten zu nutzen, die du besitzt oder kontrollierst, gemäß den Nutzungsregeln in den Apple Media Services-Nutzungsbedingungen.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Wartung &amp; Support</h3>
+        <p>Der Entwickler (Fabian Kösler) ist allein verantwortlich für Wartung und Support von TaqTiq. Apple hat keinerlei Verpflichtung zur Bereitstellung von Wartungs- oder Supportleistungen für die App.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Gewährleistung</h3>
+        <p>Im gesetzlich zulässigen Rahmen übernimmt der Entwickler keine Gewährleistung für TaqTiq. Bei Nichterfüllung einer geltenden Gewährleistung kann Apple den Kaufpreis erstatten; Apple hat darüber hinaus keine weiteren Gewährleistungspflichten.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Produkthaftung</h3>
+        <p>Der Entwickler, nicht Apple, ist für Ansprüche des Endnutzers oder Dritter im Zusammenhang mit TaqTiq oder der Nutzung von TaqTiq verantwortlich — einschließlich Produkthaftungsansprüchen und Verstößen gegen anwendbares Recht.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Geistige Eigentumsrechte</h3>
+        <p>Der Entwickler, nicht Apple, ist verantwortlich für die Untersuchung, Abwehr, Beilegung und Erfüllung von Ansprüchen Dritter bezüglich geistiger Eigentumsrechte im Zusammenhang mit TaqTiq.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Kontakt</h3>
+        <p>Bei Fragen zu den Nutzungsbedingungen: <a href="mailto:taqtiq@mail.de" style="color:var(--white)">taqtiq@mail.de</a><br>Letzte Aktualisierung: Mai 2026</p>
+      </div>
+    </div>
+    <div>
+      <p class="privacy-lang-title">English</p>
+      <div class="privacy-section">
+        <h3>Apple Standard End User License Agreement (EULA)</h3>
+        <p>TaqTiq is subject to Apple's standard terms and conditions for apps distributed through the App Store. The full terms are available at:</p>
+        <p style="margin-top:12px;"><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener" style="color:var(--white);text-decoration:underline;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.03em;">apple.com/legal/internet-services/itunes/dev/stdeula</a></p>
+      </div>
+      <div class="privacy-section">
+        <h3>License</h3>
+        <p>You are granted a non-transferable license to use TaqTiq on any Apple-branded products that you own or control, subject to the Usage Rules set forth in the Apple Media Services Terms and Conditions.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Maintenance &amp; Support</h3>
+        <p>The developer (Fabian Kösler) is solely responsible for providing maintenance and support services for TaqTiq. Apple has no obligation whatsoever to furnish any maintenance and support services with respect to the app.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Warranty</h3>
+        <p>To the maximum extent permitted by applicable law, the developer provides no warranty for TaqTiq. In the event of any failure to conform to any applicable warranty, you may notify Apple and Apple will refund the purchase price; Apple has no other warranty obligation.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Product Liability</h3>
+        <p>The developer, not Apple, is responsible for addressing any claims of the end user or any third party relating to TaqTiq or the end user's possession and/or use of TaqTiq, including product liability claims and violations of applicable laws.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Intellectual Property Rights</h3>
+        <p>The developer, not Apple, is responsible for the investigation, defense, settlement, and discharge of any third-party intellectual property infringement claims related to TaqTiq.</p>
+      </div>
+      <div class="privacy-section">
+        <h3>Contact</h3>
+        <p>Questions about these terms: <a href="mailto:taqtiq@mail.de" style="color:var(--white)">taqtiq@mail.de</a><br>Last updated: May 2026</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 TaqTiq — Fabian Kösler</p>
+  <p><a href="#privacy">Datenschutzerklärung</a></p>
+  <p><a href="#support">Support</a></p>
+  <p><a href="#terms">Nutzungsbedingungen</a></p>
+  <p>Made in Germany 🇩🇪</p>
+</footer>
+
+</body>
+</html>
