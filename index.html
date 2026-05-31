@@ -387,6 +387,33 @@
   footer a { color: var(--gray); text-decoration: none; transition: color 0.2s; }
   footer a:hover { color: var(--white); }
 
+  /* ── Screens (App Preview) ── */
+  .screens-block {
+    padding: 100px 40px;
+    border-top: 1px solid var(--border);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .screens-header { text-align: left; margin-bottom: 56px; max-width: 720px; }
+  .screens-header h2 {
+    font-size: clamp(28px, 4.5vw, 56px); font-weight: 200;
+    letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 16px;
+  }
+  .screens-header h2 em {
+    font-style: normal; font-family: 'DM Mono', monospace;
+    font-weight: 300; color: var(--gray);
+  }
+  .screens-header p { font-size: 15px; color: var(--gray); line-height: 1.7; max-width: 520px; }
+  .screens-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 40px 60px; align-items: start;
+  }
+  .screen-item { display: flex; flex-direction: column; gap: 0; }
+  .screen-item img {
+    width: 100%; height: auto; display: block;
+    border-radius: 6px;
+  }
+
   /* ── Mobile ── */
   @media (max-width: 600px) {
     nav { padding: 16px 20px; }
@@ -400,6 +427,9 @@
     .final-cta { padding: 80px 20px; }
     .pricing-inner { padding: 32px 20px; }
     .privacy-content { grid-template-columns: 1fr; }
+    .screens-block { padding: 60px 20px; }
+    .screens-grid { grid-template-columns: 1fr; gap: 28px; }
+    .screens-header { margin-bottom: 36px; }
   }
 </style>
 </head>
@@ -544,6 +574,21 @@
     </div>
   </div>
 </section>
+
+<!-- SCREENS -->
+<div class="screens-block">
+  <div class="screens-header">
+    <p class="section-label">Eindrücke</p>
+    <h2>Vier Screens.<br><em>Eine klare Idee.</em></h2>
+    <p>Timer, Verlauf, Statistik, Einstellungen — bewusst reduziert. Du tippst, TaqTiq zählt. Du wischst, TaqTiq zeigt dir, wohin deine Zeit fließt.</p>
+  </div>
+  <div class="screens-grid">
+    <div class="screen-item"><img src="screens/timer.png" alt="TaqTiq Timer-Screen — Ein Tippen, fertig" loading="lazy"></div>
+    <div class="screen-item"><img src="screens/verlauf.png" alt="TaqTiq Verlauf — Privatsphäre, alle Daten synchronisieren automatisch" loading="lazy"></div>
+    <div class="screen-item"><img src="screens/statistik.png" alt="TaqTiq Statistik — Excel & PDF Export, eigene Kategorien" loading="lazy"></div>
+    <div class="screen-item"><img src="screens/sprachen.png" alt="TaqTiq Einstellungen — 8 Sprachen, Apple Watch, iPhone, iPad" loading="lazy"></div>
+  </div>
+</div>
 
 <!-- CHECKLIST -->
 <div class="checklist-block">
